@@ -1,0 +1,34 @@
+#ifndef PUMPCONTROLLER_H
+#define PUMPCONTROLLER_H
+
+
+#include <Arduino.h>
+
+class pumpController
+{
+ public:
+  pumpController();
+  ~pumpController();
+  void setupPump(char *name,int inlo_pin,int inhi_pin,int en_pin);
+  void setPumpLevel(int val);
+  void setInLoPin(int val);
+  void setInHiPin(int val);
+  bool setEnPin(int val);
+  void setName(char *s);
+  void setDebugLevel(int val);
+  void printMessage(char *s);
+  
+ private:
+  int m_currentLevel;
+  int m_inLoPin;
+  int m_inHiPin;
+  int m_enPin;
+  int m_id;
+  char m_name[100];
+  // 0 is no debug, greater is more debug
+  int m_debugLevel = 0;
+  int m_initialized = false;
+  int m_minimum_pwm_output=30;
+};
+
+#endif

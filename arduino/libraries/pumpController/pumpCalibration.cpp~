@@ -1,0 +1,85 @@
+#include "pumpController.h"
+
+pumpController::pumpController()
+{
+
+}
+
+
+
+pumpController::~pumpController()
+{
+
+}
+
+void pumpController::setupPump(char *name,int inlo_pin,int inhi_pin,int en_pin)
+{
+  setName(name);
+  setInLoPin(inlo_pin);
+  setInHiPin(inhi_pin);
+  setEnPin(en_pin);
+
+
+  pinMode(en_pin, OUTPUT);
+  pinMode(inlo_pin, OUTPUT);
+  pinMode(inhi_pin, OUTPUT);
+
+  // Set initial rotation direction
+  digitalWrite(inlo_pin, LOW);
+  digitalWrite(inhi_pin, HIGH);
+
+  // initialize the water column at half height
+  analogWrite(en_pin, m_minimum_pwm_output); // Send PWM signal to L298N Enable pin
+
+  m_initialized=true;
+}
+
+void pumpController::setPumpLevel(int val)
+{
+  if(setEnPin(val))
+    m_currentLevel = val;
+}
+
+void pumpController::setInLoPin(int val)
+{
+  digitalWrite(m_inLoPin, val);
+}
+
+void pumpController::setInHiPin(int val)
+{
+  digitalWrite(m_inHiPin, val);
+}
+
+bool pumpController::setEnPin(int val)
+{
+  if(val<0)
+    {
+      printMessage("pwm value less than zero");
+      return false;
+    }
+  if(val>255)
+    {
+      printMessage("pwm value greater than 255");      
+      return false;
+    }
+  
+  analogWrite(m_enPin, val); // Send PWM signal to L298N Enable pin
+  return true;
+}
+
+void pumpController::setName(char *s)
+{
+  sprintf(m_name,"%s",s);
+}
+
+void pumpController::setDebugLevel(int val)
+{
+  m_debugLevel = val;
+}
+
+void pumpController::printMessage(char *s)
+{
+  char message[1000];
+  sprintf(message,"%s: %s\n",m_name,s);
+  Serial.println(s);
+}

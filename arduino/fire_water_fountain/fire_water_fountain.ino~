@@ -1,0 +1,110 @@
+#include <Arduino.h>
+#include <pumpController.h>
+#include <ledController.h>
+#include "fire_water_fountain.h"
+
+bool use_pumps = true;
+bool use_leds = false;
+
+bool run_tests = true;
+bool test_pumps = true;
+bool test_leds = false;
+
+pumpController pump_controller[NUMBER_OF_PUMPS]; 
+ledController led_controller[NUMBER_OF_LED_LIGHTS];
+
+bool lastPumpProgramButton = LOW;
+bool lastLEDProgramButton = LOW;
+int current_pump_program_id = 0;
+
+void readPumpProgramButton()
+{
+  bool currentButton = digitalRead(PUMP_PROGRAM_TOGGLE);
+  if(currentButton==HIGH && lastPumpProgramButton==LOW)
+  {
+    current_pump_program_id = (current_pump_program_id)%MAX_PUMP_PROGRAMS;
+  }
+}
+
+
+
+void setup() 
+{
+  Serial.begin(9600);
+  delay(3000);
+  //Serial.print("in setup");
+#if 0
+  // just an LED test since I was having so many issues with the LEDs
+  FastLED.addLeds<LED_TYPE,LEFT_LED_CONTROL_PIN,COLOR_ORDER>(all_led[LEFT], NUMBER_LEDS_PER_LIGHT).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<LED_TYPE,CENTER_LED_CONTROL_PIN,COLOR_ORDER>(all_led[CENTER], NUMBER_LEDS_PER_LIGHT).setCorrection(TypicalLEDStrip);
+  FastLED.setBrightness(255);
+  return;
+#endif
+
+  // put your setup code here, to run once:
+  if(use_pumps)
+  {
+    setupPumps();
+    pinMode(PUMP_PROGRAM_TOGGLE, INPUT);
+  }
+  
+  if(use_leds)
+  {
+    //Serial.print("setting up leds\n");
+    setupLEDs();
+    pinMode(LED_PROGRAM_TOGGLE, INPUT);
+ }
+}
+
+void loop() 
+{
+  static bool first_time=true;
+  if(first_time)
+  {
+    if(use_pumps)
+    {
+      for(int p=0;p<NUMBER_OF_PUMPS;p++)
+      {
+        pump_controller[p].printPumpInfo();
+      }
+    }
+    first_time=false;
+  }
+  // put your main code here, to run repeatedly:
+
+  if(use_pumps)
+  {
+    if(run_tests)
+    {
+      if(test_pumps)
+      {
+        if(!pump_test())
+        {
+          test_pumps = false;
+        }
+      }
+    }
+    else
+    {
+      // read pump program toggle
+      readPumpProgramButton();
+
+      runPumpProgram();
+    }
+  }
+
+  if(use_leds)
+  {
+    if(run_tests && test_leds)
+    {
+      led_test();
+    }
+    else
+    {
+      //read button presses
+      readLEDProgramButton();
+
+      runLEDProgram();
+    }
+  }
+}

@@ -1,0 +1,5 @@
+1) goto arduino
+2) ./arduino-ide
+3) select the board
+4) may have to change the permissions of the serial port with: sudo chmod 777 /dev/ttyACM0
+5) Upload the sketch you want to use and it should start running

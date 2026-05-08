@@ -1,0 +1,35 @@
+#ifndef LEDCONTROLLER_H
+#define LEDCONTROLLER_H
+
+
+#include <Arduino.h>
+
+class ledController
+{
+ public:
+  ledController();
+  ~ledController();
+  void setupLED(char *name,int red_pin,int green_pin,int blue_pin);
+  void setLEDColor(int red,int green, int blue);
+  void setRedPin(int pin);
+  void setGreenPin(int pin);
+  void setBluePin(int pin);
+  void setName(char *s);
+  void setDebugLevel(int val);
+  void printMessage(char *s);
+  
+ private:
+  int m_currentRed = 0;
+  int m_currentGreen = 0;
+  int m_currentBlue = 0;  
+  int m_redPin;
+  int m_greenPin;
+  int m_bluePin;
+  int m_id;
+  char m_name[100];
+  // 0 is no debug, greater is more debug
+  int m_debugLevel = 0;
+  int m_initialized = false;
+};
+
+#endif

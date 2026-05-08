@@ -1,0 +1,61 @@
+#ifndef LEDBLOCK_H
+#define LEDBLOCK_H
+
+#include <FastLED.h>
+#include <Arduino.h>
+
+enum
+  {
+    INCREASING,
+    DECREASING,
+    LIMBO
+  };
+
+
+class ledBlock
+{
+ public:
+  
+  ledBlock();
+  ~ledBlock();
+#if 0
+  bool getActive();
+  void setActive(bool val);
+  unsigned int getStartLED();
+  unsigned int getEndLED();
+  
+  void runOnce(CRGB *leds);
+  void setup(unsigned int startLED,unsigned int endLED,unsigned int block_id, int max_time_at_brightness_level,float brightness_change_amount);
+  void reset();
+  void reinitialize(uint8_t red,uint8_t green,uint8_t blue,float brightness_level,float brightness_change_slowing_rate, int mode);
+  void adjustColorBasedOnBrightness(uint8_t red,uint8_t green,uint8_t blue,float brightness_level, uint8_t &adj_red,uint8_t &adj_green,uint8_t &adj_blue);
+#endif  
+
+  unsigned int m_startLED;
+  unsigned int m_endLED;
+  float m_currentBrightnessLevel;
+  float m_startingBrightnessLevel;
+  int m_maxBrightnessAbsoluteLevel;
+  float m_brightnessChangeSlowingRate;
+  float m_brightnessChangeAmount;
+  unsigned long m_maxTimeAtBrightnessLevelMS;
+
+  uint8_t m_origRed;
+  uint8_t m_origGreen;
+  uint8_t m_origBlue;
+  uint8_t m_adjustedRed;
+  uint8_t m_adjustedGreen;
+  uint8_t m_adjustedBlue;
+  
+  unsigned int m_mode; // either increasing, decreasing or in limbo
+  unsigned int m_blockID;
+  unsigned long m_timeAtCurrentLevelMS;
+  unsigned long m_startTimeMS;
+  unsigned long m_settingID;
+  
+  bool m_active=false;
+  bool m_valid=false;
+  int m_debugLevel;
+ private:
+};
+#endif

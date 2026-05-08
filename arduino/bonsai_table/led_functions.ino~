@@ -1,0 +1,165 @@
+
+
+
+CRGB temporal_color(255,0,0);
+
+void singleColor()
+{
+
+}
+
+void rotatingColor()
+{
+
+}
+
+void temporalRainbow()
+{
+  float slow_factor = 0.2; // between [0,1]
+  float max_delay_ms = 1000.0;
+  static bool first_time=true;
+  static long color_start_time_ms = 0;
+  if(first_time)
+  {
+    color_start_time_ms = millis();
+  }
+
+  unsigned long current_time_ms = millis();
+  unsigned int elapsed_time_ms = current_time_ms - color_start_time_ms;
+  float time_threshold_ms = max_delay_ms*slow_factor;
+  //Serial.print(elapsed_time_ms);
+  //Serial.print("\n");
+  if(!first_time)
+  {
+    if(elapsed_time_ms<time_threshold_ms)
+    {
+      return;
+    }
+  }
+  else
+  {
+    first_time=false;
+  }
+
+
+  // if here, we are ready for the next color
+  color_start_time_ms = millis();
+
+  static CRGB temporal_color(255,0,0);
+
+  if(temporal_color.red==255 && temporal_color.green<255 && temporal_color.blue==0)
+  {
+    // moving towards yellow from red
+    if(m_debug_led)
+    {
+ //     Serial.print("moving towards yellow from red");
+    } 
+
+    temporal_color.green++;
+  }
+  else if(temporal_color.green==255 && temporal_color.red>0 && temporal_color.blue==0)
+  {
+    // moving towards pure green from yellow
+    if(m_debug_led)
+    {
+//      Serial.print("moving towards pure green from yellow");
+    }
+
+    temporal_color.red--;
+  }
+  else if(temporal_color.green==255 && temporal_color.red==0 && temporal_color.blue<255)
+  {
+    //moving towards turquoise from green
+    if(m_debug_led)
+    {
+//        Serial.print("moving towards turquoise from green");
+    }
+
+    temporal_color.blue++;
+  }
+  else if(temporal_color.blue==255 && temporal_color.green>0 && temporal_color.red==0)
+  {
+    // moving towards pure blue from turquoise
+    if(m_debug_led)
+    {
+ //     Serial.println("moving towards pure blue from turquoise");
+    }
+
+    temporal_color.green--;
+  }
+  else if(temporal_color.blue==255 && temporal_color.red<255 && temporal_color.green==0)
+  {
+    // moving towards violet from pure blue
+    if(m_debug_led)
+    {
+     Serial.print("moving towards violet from pure blue");
+    }
+
+    temporal_color.red++;
+  }
+  else if(temporal_color.blue>0 && temporal_color.red==255 && temporal_color.green==0)
+  {
+    // moving towards violet from pure blue
+    if(m_debug_led)
+    {
+ //      Serial.print("moving towards red from violet");
+    }
+
+    temporal_color.blue--;
+  }
+
+  // fill the led arrays
+  for(int l=0;l<NUMBER_OF_LED_LIGHTS;l++)
+  {
+    if(!led_controller[l].m_use)
+    {
+      continue;
+    }
+    for(int i=0;i<NUMBER_LEDS_PER_LIGHT;i++)
+    {
+      all_led[l][i].red = temporal_color.red;
+      all_led[l][i].green = temporal_color.green;
+      all_led[l][i].blue = temporal_color.blue;
+    }
+  }
+}
+
+
+
+void readLEDProgramButton()
+{
+  bool currentButton = digitalRead(LED_PROGRAM_TOGGLE_PIN);
+  if(currentButton==HIGH && lastLEDProgramButton==LOW)
+  {
+    currentLEDProgramID = (currentLEDProgramID+1)%MAX_NUMBER_LED_PATTERNS;
+    Serial.print("led program = ");
+    Serial.print(currentLEDProgramID);
+    Serial.print("\n");
+    lastLEDProgramButton = HIGH;
+  }
+  if(currentButton==LOW && lastLEDProgramButton==HIGH)
+  {
+    // reset
+    lastLEDProgramButton=LOW;
+  }
+}
+
+
+void runLEDProgram()
+{ 
+  if(currentLEDProgramID==SINGLE_COLOR)
+  {
+    singleColor();
+  }
+  else if(currentLEDProgramID==ROTATING_COLOR)
+  {
+    rotatingColor();
+  }
+  else if(currentLEDProgramID==TEMPORAL_RAINBOX)
+  {
+    temporalRainbow();
+  }
+
+  FastLED.show();
+  FastLED.delay(10);
+}

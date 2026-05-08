@@ -1,0 +1,98 @@
+#include <Arduino.h>
+#include <FastLED.h>
+#include "bonsai_table.h"
+
+void setup()
+{
+  Serial.begin(9600);
+  delay(1000);
+
+  pinMode(LED_PROGRAM_TOGGLE_PIN, INPUT);
+
+  FastLED.addLeds<LED_TYPE, LED_CONTROL_PIN, COLOR_ORDER>(leds, NUM_LEDS); 
+  // GRB is the color order for WS2815. If your LEDs are a different order, you may need to adjust this.
+
+  // set master brightness control
+  FastLED.setBrightness(MAX_BRIGHTNESS);
+  
+  // set all LEDs to off at start
+  for(int i=0;i<NUM_LEDS;i++)
+  {
+    leds[i].red=0;
+    leds[i].green=0;
+    leds[i].blue=0;
+  }
+
+  FastLED.show();
+
+  // set one above threshold so LEDs are initially off
+  currentLightLevel = lightSensorThreshold+1;
+
+  setupColorRange();
+}
+
+
+void loop()
+{
+#if 0
+  for(int i=0;i<NUM_LEDS;i++)
+  {
+    leds[i].red=255;
+    leds[i].green=0;
+    leds[i].blue=0;
+  }
+
+  FastLED.show();
+  delay(1000);
+  return;
+#endif  
+
+// read the light sensor
+  currentLightLevel = analogRead(LIGHT_SENSOR_INPUT_PIN);
+
+  if(currentLightLevel>lightSensorThreshold)
+  {
+    for(int i=0;i<NUM_LEDS;i++)
+    {
+      leds[i] = no_color;
+    }
+    FastLED.show();
+    delay(5000);
+    return;
+  }
+
+  if(debugLevel>2)
+  {
+    Serial.print("light value = ");
+    Serial.print(currentLightLevel);
+    Serial.print("\n");
+  }
+  
+  // read the brightness pot
+  currentBrightnessLevel = analogRead(BRIGHTNESS_CONTROL_POT_PIN);  
+  if(debugLevel>2)
+  {
+    Serial.print("brighness value = ");
+    Serial.print(currentBrightnessLevel);
+    Serial.print("\n");
+  }
+  // read the color pot
+  // read the brightness pot
+  currentColorLevel = analogRead(COLOR_CONTROL_POT_PIN);  
+  if(debugLevel>2)
+  {
+    Serial.print("color value = ");
+    Serial.print(currentColorLevel);
+    Serial.print("\n");
+  }
+
+  // determine if the LED program toggle was triggered
+  readLEDProgramButton();
+
+  // update color value
+
+
+  runLEDProgram();
+  delay(100);
+}
+

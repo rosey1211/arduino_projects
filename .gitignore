@@ -1,6 +1,8 @@
 # Prerequisites
 *.d
 
+arduino-ide*
+
 # Compiled Object files
 *.slo
 *.lo
