@@ -1,0 +1,72 @@
+#include "ledController.h"
+
+ledController::ledController()
+{
+
+}
+
+
+
+ledController::~ledController()
+{
+
+}
+
+void ledController::setRedPin(int red_pin)
+{
+  m_redPin=red_pin;
+}
+
+void ledController::setGreenPin(int green_pin)
+{
+  m_greenPin=green_pin;
+}
+
+void ledController::setBluePin(int blue_pin)
+{
+  m_bluePin=blue_pin;
+}
+
+void ledController::setupLED(char *name,int red_pin,int green_pin,int blue_pin)
+{
+  setName(name);
+  setRedPin(red_pin);
+  setGreenPin(green_pin);
+  setBluePin(blue_pin);
+
+
+  pinMode(red_pin, OUTPUT);
+  pinMode(green_pin, OUTPUT);
+  pinMode(blue_pin, OUTPUT);
+
+  // initialize the water column at half height
+  analogWrite(red_pin, 0); // Send PWM signal to L298N Enable pin
+  analogWrite(green_pin, 0); // Send PWM signal to L298N Enable pin
+  analogWrite(blue_pin, 0); // Send PWM signal to L298N Enable pin  
+
+  m_initialized=true;
+}
+
+void ledController::setLEDColor(int red,int green,int blue)
+{
+  analogWrite(m_redPin, red); // Send PWM signal to L298N Enable pin
+  analogWrite(m_greenPin, green); // Send PWM signal to L298N Enable pin
+  analogWrite(m_bluePin, blue); // Send PWM signal to L298N Enable pin  
+}
+
+void ledController::setName(char *s)
+{
+  sprintf(m_name,"%s",s);
+}
+
+void ledController::setDebugLevel(int val)
+{
+  m_debugLevel = val;
+}
+
+void ledController::printMessage(char *s)
+{
+  char message[1000];
+  sprintf(message,"%s: %s\n",m_name,s);
+  Serial.println(s);
+}
