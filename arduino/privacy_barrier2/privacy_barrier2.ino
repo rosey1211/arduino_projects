@@ -50,53 +50,8 @@ void loop()
     FastLED.show();
     delay(100);
   }  
+  
 
-#if 0
-  //Serial.print("target active blocks = ");
-  //Serial.print((int)g_target_number_active_led_blocks);
-  //Serial.print("\n");
-  for(int b=0;b<NUM_LED_BLOCKS;b++)
-  {
-    Serial.print("led block: ");
-    Serial.print(b);
-    Serial.print("\n\n");
-    for(int i=0;i<NUM_LEDS;i++)
-    {
-      g_leds[i].red=0;
-      g_leds[i].green=255;
-      g_leds[i].blue=0;
-    }
-
-#if 1
-    unsigned int start_led=g_led_block[b].m_startLED;
-    unsigned int end_led=g_led_block[b].m_endLED;
-    //Serial.print((int)start_led);
-    //Serial.print((int)end_led);
-    //Serial.print("\n");
-    for(int l=(int)start_led;l<=(int)end_led;l++)
-    {
-      g_leds[l].red=255;
-      g_leds[l].green=0;
-      g_leds[l].blue=0;
-    }
-#endif
-
-    FastLED.show();
-    delay(5000);
-  }
-  //Serial.print("\n\n\n");
-
-
-  return;
-#endif
-
-#if 0
-    Serial.print("s = ");
-    Serial.print(start_led);
-    Serial.print(" : e = ");
-    Serial.print(end_led);
-    Serial.print("\n");
-#endif
 
  // determine if the LED program toggle was triggered
   if(readLEDProgramButton() && g_currentLEDProgramID!=SIMPLE_TEST)
@@ -109,6 +64,48 @@ void loop()
     FastLED.show();
     delay(500);
   }
+
+
+
+  // this runs independent of the light level so do before light level logic
+  if(g_currentLEDProgramID==SEQUENTIAL_BLOCK_TEST)
+  {
+    //Serial.print("target active blocks = ");
+    //Serial.print((int)g_target_number_active_led_blocks);
+    //Serial.print("\n");
+    for(int b=0;b<NUM_LED_BLOCKS;b++)
+    {
+      Serial.print("led block: ");
+      Serial.print(b);
+      Serial.print("\n\n");
+      for(int i=0;i<NUM_LEDS;i++)
+      {
+        g_leds[i].red=0;
+        g_leds[i].green=255;
+        g_leds[i].blue=0;
+      }
+  
+  #if 1
+      unsigned int start_led=g_led_block[b].m_startLED;
+      unsigned int end_led=g_led_block[b].m_endLED;
+      //Serial.print((int)start_led);
+      //Serial.print((int)end_led);
+      //Serial.print("\n");
+      for(int l=(int)start_led;l<=(int)end_led;l++)
+      {
+        g_leds[l].red=255;
+        g_leds[l].green=0;
+        g_leds[l].blue=0;
+      }
+  #endif
+  
+      FastLED.show();
+      delay(5000);
+    }
+    //Serial.print("\n\n\n");
+    return;
+  }
+
 
   // read the light sensor
   g_currentLightLevel = analogRead(g_LIGHT_SENSOR_INPUT_PIN);
@@ -170,4 +167,3 @@ void loop()
   runLEDProgram();
   //delay(100);
 }
-

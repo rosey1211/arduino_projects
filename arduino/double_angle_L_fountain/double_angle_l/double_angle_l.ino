@@ -4,7 +4,11 @@
 
 #include <FastLED.h>
 
+#define REAL
+
 FASTLED_USING_NAMESPACE
+
+int debugLevel = 3;
 
 // FastLED "100-lines-of-code" demo reel, showing just a few 
 // of the kinds of animation patterns you can quickly and easily 
@@ -20,21 +24,31 @@ FASTLED_USING_NAMESPACE
 
 // in this case, UPPER is the left inverted L since it is actually above the other cross-member
 // LOWER is the right inverted L
-const int LED=7;
+const int PRGM_LED=7;
+
+#define HIGH_LIGHT_LEVEL_LED_PIN 3
+
 const int BUTTON=2;
 #define UPPER_DATA_PIN    5
 #define LOWER_DATA_PIN    4
 
+const int g_LIGHT_SENSOR_INPUT_PIN = A2;
+
 //#define CLK_PIN   4
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
+CRGB g_no_color;
 
 //#define UPPER_NUM_LEDS 20
-#define UPPER_NUM_LEDS    55
-CRGB upper_leds[UPPER_NUM_LEDS];
+// 7/23/2026  #define UPPER_NUM_LEDS    55
+#define UPPER_NUM_LEDS    38
 
-//#define LOWER_NUM_LEDS    20
-#define LOWER_NUM_LEDS    47
+CRGB upper_leds[UPPER_NUM_LEDS];  
+
+//#define LOWER_NUM_LEDS    47
+// 7/23/2026 #define LOWER_NUM_LEDS    39
+#define LOWER_NUM_LEDS    51
+
 CRGB lower_leds[LOWER_NUM_LEDS];
 // this is used for the opposing version of the comet
 CRGB temp_led_array[LOWER_NUM_LEDS];
@@ -44,6 +58,16 @@ CRGB temp_led_array[LOWER_NUM_LEDS];
 
 bool use_upper_led_strip = true;
 bool use_lower_led_strip = true;
+bool light_sensor_bypass = false;
+
+#if defined(REAL)
+int g_lightSensorThreshold=30;
+//int g_lightSensorThreshold=0;
+#else
+int g_lightSensorThreshold=500;
+#endif
+
+int g_currentLightLevel;
 
 bool use_temporal_rainbow=true;
 bool use_comet=true;
@@ -67,8 +91,9 @@ double min_pot_value = 0.0;
 //bool currentButton = LOW;
 // current led routine
 int pattern_id = 0;
-// for now, must temporal rainbow and comet.  As more are added, this number will increase
-int max_num_patterns = 4;
+// for now, first one is test with upper led green and lower led red,
+//must temporal rainbow and comet.  As more are added, this number will increase
+int max_num_patterns = 5;
 
 #define CHECK_POTS_INTERVAL 100
 
@@ -81,7 +106,11 @@ void setup() {
   
   // setup the button
   pinMode(BUTTON,INPUT);
-  pinMode(LED,OUTPUT);
+  pinMode(PRGM_LED,OUTPUT);
+  pinMode(HIGH_LIGHT_LEVEL_LED_PIN, OUTPUT);
+
+  // set one above threshold so LEDs are initially off
+  g_currentLightLevel = g_lightSensorThreshold+1;
 
   // tell FastLED about the LED strip configuration
   if(use_upper_led_strip)
@@ -137,6 +166,7 @@ int random_fill_count=0;
 // pattern_id values - new patterns will get added in here
 enum
 {
+  TEST_PATTERN,
   SYNCED_COMET,
   OPPOSING_COMET,
   TEMPORAL_RAINBOW,
@@ -163,19 +193,19 @@ bool debounce()
 bool lastButton = LOW;
 void loop()
 { 
-
+ 
 #if 1  
   bool currentButton = digitalRead(BUTTON);
    
   if(currentButton==HIGH && lastButton==LOW)
   {
       char line[100];
-      digitalWrite(LED,HIGH);
+      digitalWrite(PRGM_LED,HIGH);
       pattern_id=(pattern_id+1)%max_num_patterns; 
   }
   else if(currentButton==LOW)
   {
-      digitalWrite(LED,LOW);
+      digitalWrite(PRGM_LED,LOW);
   }
 
   lastButton=currentButton;
@@ -187,7 +217,6 @@ void loop()
       sprintf(line,"pattern_id = %d",pattern_id);
       Serial.println(line);
   }
-  //return;
 #endif
   if(insaneSuperDebug)
   {
@@ -196,6 +225,37 @@ void loop()
       Serial.println(line);
 
   }
+  if(!light_sensor_bypass)
+  {
+    // read the light sensor
+    g_currentLightLevel = analogRead(g_LIGHT_SENSOR_INPUT_PIN);
+    if(debugLevel>2)
+    {
+      Serial.print("light value = ");
+      Serial.print(g_currentLightLevel);
+      Serial.print("\n");
+    }
+   if(g_currentLightLevel>g_lightSensorThreshold)
+    {
+      for(int i=0;i<UPPER_NUM_LEDS;i++)
+      {
+        upper_leds[i] = g_no_color;
+      }  
+      for(int i=0;i<LOWER_NUM_LEDS;i++)
+      {
+        lower_leds[i] = g_no_color;
+      }
+  
+      digitalWrite(HIGH_LIGHT_LEVEL_LED_PIN, HIGH);   
+      FastLED.show();
+      delay(100);
+      return;
+  }
+
+  digitalWrite(HIGH_LIGHT_LEVEL_LED_PIN, LOW);   
+  } // end light_sensor_bypass
+
+  
   if(pattern_id==TEMPORAL_RAINBOW)
   {
     adjustTemporalRainbowColor();
@@ -209,6 +269,10 @@ void loop()
        sendColorToSpecificLEDStrip(lower_leds,LOWER_NUM_LEDS);  
     }
    }
+  else if(pattern_id==TEST_PATTERN)
+  {
+    test_pattern();
+  }
   else if(pattern_id==SYNCED_COMET)
   {
     if(use_upper_led_strip)
@@ -265,7 +329,10 @@ void loop()
   // insert a delay to keep the framerate modest
   //'FastLED.delay(1000/FRAMES_PER_SECOND); 
   FastLED.delay(time_delay); 
-    
+
+
+
+#if 0 // not doing brightness control with a pot in this module    
   int dynamic_pots_interval = max_time_period_ms + (min_time_period_ms - max_time_period_ms)*((double)time_period_pot_val/max_pot_value);
   
   if(debug)
@@ -317,6 +384,7 @@ void loop()
     FastLED.setBrightness(new_brightness);
     delay(100);
   }
+#endif // brightness pot control  
 
  }
 
@@ -454,6 +522,29 @@ void initializeComet(CRGB *initial_comet_array, int num_leds)
 
 
 
+void test_pattern()
+{
+   if(use_upper_led_strip)
+   {
+    // upper is red
+	for(int i=0;i<UPPER_NUM_LEDS;i++)
+	{
+	    upper_leds[i].red = 255;
+	    upper_leds[i].green = 0;
+	    upper_leds[i].blue = 0;	    
+	}
+   }
+   if(use_lower_led_strip)
+   {
+    // lower is green
+	for(int i=0;i<LOWER_NUM_LEDS;i++)
+	{
+	    lower_leds[i].red = 0;
+	    lower_leds[i].green = 255;
+	    lower_leds[i].blue = 0;	    
+	}
+   }
+}
 
 void adjustComet(CRGB *initial_array, CRGB *led_array, int num_leds)
 {
