@@ -66,7 +66,7 @@ void loop()
   }
 
 
-
+#if 0
   // this runs independent of the light level so do before light level logic
   if(g_currentLEDProgramID==SEQUENTIAL_BLOCK_TEST)
   {
@@ -74,7 +74,12 @@ void loop()
     //Serial.print((int)g_target_number_active_led_blocks);
     //Serial.print("\n");
     for(int b=0;b<NUM_LED_BLOCKS;b++)
-    {
+    { 
+      if(readLEDProgramButton())
+      {
+        break;
+      }
+      
       Serial.print("led block: ");
       Serial.print(b);
       Serial.print("\n\n");
@@ -105,7 +110,7 @@ void loop()
     //Serial.print("\n\n\n");
     return;
   }
-
+#endif
 
   // read the light sensor
   g_currentLightLevel = analogRead(g_LIGHT_SENSOR_INPUT_PIN);
